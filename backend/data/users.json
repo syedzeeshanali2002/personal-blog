@@ -1,0 +1,9 @@
+[
+  {
+    "id": "1",
+    "username": "admin",
+    "password": "$2a$10$AEOBRro.WOyAT8qp6IlrbebFfs2EQR4M9p9oWvIyLVYbkLZVpuuJK",
+    "email": "admin@blog.com",
+    "name": "Blog Admin"
+  }
+]
