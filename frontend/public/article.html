@@ -1,0 +1,193 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>Article — The Journal</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,700;0,900;1,400&family=DM+Sans:wght@300;400;500&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --ink: #1a1209; --paper: #faf8f3; --cream: #f2ede3;
+    --amber: #c8832a; --muted: #8a7e6d; --border: #e0d8c8;
+  }
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+  html { scroll-behavior: smooth; }
+  body { background: var(--paper); color: var(--ink); font-family: 'DM Sans', sans-serif; }
+
+  header {
+    border-bottom: 2px solid var(--ink); padding: 0 2rem;
+    position: sticky; top: 0; z-index: 100; background: var(--paper);
+  }
+  .header-inner { max-width: 1100px; margin: 0 auto; display: flex; align-items: center; justify-content: space-between; padding: 1rem 0; }
+  .logo { font-family: 'Playfair Display', serif; font-size: 1.6rem; font-weight: 900; text-decoration: none; color: var(--ink); }
+  .logo span { color: var(--amber); }
+  .back-link { text-decoration: none; color: var(--muted); font-size: 0.9rem; display: flex; align-items: center; gap: 0.4rem; }
+  .back-link:hover { color: var(--ink); }
+
+  .loading { text-align: center; padding: 6rem 2rem; color: var(--muted); }
+  .spinner { display: inline-block; width: 24px; height: 24px; border: 2px solid var(--border); border-top-color: var(--amber); border-radius: 50%; animation: spin 0.7s linear infinite; }
+  @keyframes spin { to { transform: rotate(360deg); } }
+
+  .article-hero { background: var(--ink); color: var(--paper); padding: 4rem 2rem; }
+  .article-hero-inner { max-width: 760px; margin: 0 auto; }
+  .article-tags { display: flex; gap: 0.6rem; margin-bottom: 1.5rem; flex-wrap: wrap; }
+  .article-tag { font-size: 0.72rem; letter-spacing: 0.15em; text-transform: uppercase; color: var(--amber); }
+  .article-title {
+    font-family: 'Playfair Display', serif;
+    font-size: clamp(2rem, 5vw, 3.5rem);
+    font-weight: 900; line-height: 1.15; margin-bottom: 1.5rem;
+  }
+  .article-meta { display: flex; gap: 1.5rem; color: rgba(250,248,243,0.6); font-size: 0.85rem; flex-wrap: wrap; }
+  .article-meta span { display: flex; align-items: center; gap: 0.3rem; }
+
+  .cover-wrap { max-width: 760px; margin: 0 auto; }
+  .cover-img { width: 100%; max-height: 400px; object-fit: cover; border-bottom: 2px solid var(--ink); }
+
+  .content-wrap { max-width: 760px; margin: 0 auto; padding: 3rem 2rem 5rem; }
+
+  /* ── Markdown Content Styles ── */
+  .article-content { font-size: 1.05rem; line-height: 1.9; color: #2a2015; }
+  .article-content h1, .article-content h2, .article-content h3 {
+    font-family: 'Playfair Display', serif; margin: 2.5rem 0 1rem;
+    line-height: 1.2; color: var(--ink);
+  }
+  .article-content h1 { font-size: 2.2rem; }
+  .article-content h2 { font-size: 1.6rem; border-bottom: 1.5px solid var(--border); padding-bottom: 0.5rem; }
+  .article-content h3 { font-size: 1.2rem; }
+  .article-content p { margin: 0 0 1.4rem; }
+  .article-content ul, .article-content ol { margin: 0 0 1.4rem 1.5rem; }
+  .article-content li { margin-bottom: 0.5rem; }
+  .article-content a { color: var(--amber); }
+  .article-content blockquote {
+    border-left: 4px solid var(--amber); padding: 1rem 1.5rem;
+    margin: 2rem 0; background: var(--cream);
+    font-family: 'Playfair Display', serif; font-style: italic; font-size: 1.1rem;
+  }
+  .article-content pre {
+    background: var(--ink); color: #e8e4d8;
+    padding: 1.5rem; border-radius: 2px; overflow-x: auto;
+    margin: 1.5rem 0; font-family: 'JetBrains Mono', monospace; font-size: 0.875rem;
+    line-height: 1.6;
+  }
+  .article-content code {
+    font-family: 'JetBrains Mono', monospace;
+    background: var(--cream); padding: 0.15em 0.4em;
+    font-size: 0.875em; border-radius: 2px;
+  }
+  .article-content pre code { background: none; padding: 0; }
+  .article-content img { max-width: 100%; margin: 1.5rem 0; }
+  .article-content table { width: 100%; border-collapse: collapse; margin: 1.5rem 0; font-size: 0.9rem; }
+  .article-content th { background: var(--ink); color: var(--paper); padding: 0.7rem 1rem; text-align: left; }
+  .article-content td { border: 1px solid var(--border); padding: 0.6rem 1rem; }
+  .article-content tr:nth-child(even) td { background: var(--cream); }
+  .article-content hr { border: none; border-top: 1.5px solid var(--border); margin: 2.5rem 0; }
+
+  .divider { border: none; border-top: 2px solid var(--ink); margin: 3rem 0; }
+
+  footer { border-top: 2px solid var(--ink); padding: 2rem; background: var(--ink); color: var(--paper); text-align: center; }
+  footer p { font-size: 0.85rem; color: rgba(250,248,243,0.5); }
+  footer a { color: var(--amber); text-decoration: none; }
+
+  @media (max-width: 600px) {
+    .content-wrap { padding: 2rem 1.2rem 4rem; }
+  }
+</style>
+</head>
+<body>
+
+<header>
+  <div class="header-inner">
+    <a href="/" class="logo">The<span>.</span>Journal</a>
+    <a href="/" class="back-link">← Back to Articles</a>
+  </div>
+</header>
+
+<div id="pageContent">
+  <div class="loading"><div class="spinner"></div></div>
+</div>
+
+<footer>
+  <p>Built with ♥ using Node.js &mdash; <a href="/admin/login">Manage Blog</a></p>
+</footer>
+
+<script>
+  // Simple markdown parser
+  function parseMarkdown(md) {
+    return md
+      .replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;')
+      .replace(/```(\w*)\n([\s\S]*?)```/g, (_, lang, code) =>
+        `<pre><code class="lang-${lang}">${code.trim()}</code></pre>`)
+      .replace(/`([^`]+)`/g, '<code>$1</code>')
+      .replace(/^#{4} (.+)$/gm, '<h4>$1</h4>')
+      .replace(/^#{3} (.+)$/gm, '<h3>$1</h3>')
+      .replace(/^#{2} (.+)$/gm, '<h2>$1</h2>')
+      .replace(/^#{1} (.+)$/gm, '<h1>$1</h1>')
+      .replace(/\*\*([^*]+)\*\*/g, '<strong>$1</strong>')
+      .replace(/\*([^*]+)\*/g, '<em>$1</em>')
+      .replace(/\[([^\]]+)\]\(([^)]+)\)/g, '<a href="$2">$1</a>')
+      .replace(/^> (.+)$/gm, '<blockquote>$1</blockquote>')
+      .replace(/^---$/gm, '<hr>')
+      .replace(/^\* (.+)$/gm, '<li>$1</li>')
+      .replace(/^- (.+)$/gm, '<li>$1</li>')
+      .replace(/^\d+\. (.+)$/gm, '<li>$1</li>')
+      .replace(/(<li>[\s\S]+?<\/li>\n?)+/g, m => `<ul>${m}</ul>`)
+      .replace(/\n\n/g, '</p><p>')
+      .replace(/^(?!<[houbp]|<li|<blockquote|<hr|<pre)(.+)$/gm, '<p>$1</p>')
+      .replace(/<p><\/p>/g, '')
+      .replace(/<p>(<h[1-6]>[\s\S]*?<\/h[1-6]>)<\/p>/g, '$1')
+      .replace(/<p>(<ul>[\s\S]*?<\/ul>)<\/p>/g, '$1')
+      .replace(/<p>(<pre>[\s\S]*?<\/pre>)<\/p>/g, '$1')
+      .replace(/<p>(<blockquote>[\s\S]*?<\/blockquote>)<\/p>/g, '$1')
+      .replace(/<p>(<hr>)<\/p>/g, '$1');
+  }
+
+  function formatDate(d) {
+    if (!d) return '';
+    return new Date(d).toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' });
+  }
+
+  async function loadArticle() {
+    const slug = location.pathname.replace('/article/', '');
+    try {
+      const res = await fetch(`/api/articles/${slug}`);
+      if (!res.ok) throw new Error('Not found');
+      const a = await res.json();
+      document.title = `${a.title} — The Journal`;
+
+      document.getElementById('pageContent').innerHTML = `
+        <div class="article-hero">
+          <div class="article-hero-inner">
+            <div class="article-tags">${a.tags.map(t => `<span class="article-tag">#${t}</span>`).join('')}</div>
+            <h1 class="article-title">${a.title}</h1>
+            <div class="article-meta">
+              <span>✍️ ${a.author}</span>
+              <span>📅 ${formatDate(a.publishedAt)}</span>
+              <span>👁 ${a.views || 0} views</span>
+              <span>⏱ ${Math.max(1, Math.ceil(a.content.split(' ').length / 200))} min read</span>
+            </div>
+          </div>
+        </div>
+        ${a.coverImage ? `<div class="cover-wrap"><img class="cover-img" src="${a.coverImage}" alt="${a.title}"></div>` : ''}
+        <div class="content-wrap">
+          <div class="article-content">${parseMarkdown(a.content)}</div>
+          <hr class="divider">
+          <p style="color:var(--muted);font-size:0.9rem;text-align:center">
+            ← <a href="/" style="color:var(--amber);text-decoration:none">Back to all articles</a>
+          </p>
+        </div>
+      `;
+    } catch {
+      document.getElementById('pageContent').innerHTML = `
+        <div class="loading">
+          <p style="font-size:3rem;margin-bottom:1rem">📄</p>
+          <h2 style="font-family:'Playfair Display',serif;margin-bottom:0.5rem">Article Not Found</h2>
+          <p><a href="/" style="color:var(--amber)">← Back to Home</a></p>
+        </div>`;
+    }
+  }
+
+  loadArticle();
+</script>
+</body>
+</html>

@@ -1,0 +1,76 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>Admin Login — The Journal</title>
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@700;900&family=DM+Sans:wght@400;500&display=swap" rel="stylesheet">
+<style>
+  :root { --ink:#1a1209;--paper:#faf8f3;--amber:#c8832a;--muted:#8a7e6d;--border:#e0d8c8;--red:#b94040; }
+  *{box-sizing:border-box;margin:0;padding:0}
+  body{background:var(--ink);min-height:100vh;display:flex;align-items:center;justify-content:center;font-family:'DM Sans',sans-serif;padding:1rem;
+    background-image:repeating-linear-gradient(0deg,transparent,transparent 39px,rgba(255,255,255,0.02) 40px),
+    repeating-linear-gradient(90deg,transparent,transparent 39px,rgba(255,255,255,0.02) 40px);
+  }
+  .card{background:var(--paper);width:100%;max-width:420px;padding:3rem 2.5rem;}
+  .logo{font-family:'Playfair Display',serif;font-size:1.8rem;font-weight:900;color:var(--ink);margin-bottom:0.3rem;}
+  .logo span{color:var(--amber);}
+  .sub{color:var(--muted);font-size:0.875rem;margin-bottom:2.5rem;}
+  label{display:block;font-size:0.8rem;font-weight:500;color:var(--muted);text-transform:uppercase;letter-spacing:0.08em;margin-bottom:0.4rem;}
+  input{width:100%;padding:0.75rem 1rem;border:1.5px solid var(--border);background:white;font-family:inherit;font-size:1rem;color:var(--ink);outline:none;margin-bottom:1.2rem;transition:border-color 0.2s;}
+  input:focus{border-color:var(--amber);}
+  .btn{width:100%;padding:0.85rem;background:var(--ink);color:var(--paper);border:none;cursor:pointer;font-family:inherit;font-size:1rem;font-weight:500;transition:background 0.2s;letter-spacing:0.03em;}
+  .btn:hover{background:var(--amber);}
+  .btn:disabled{opacity:0.6;cursor:not-allowed;}
+  .error{background:#fff0f0;border:1.5px solid var(--red);color:var(--red);padding:0.75rem 1rem;margin-bottom:1rem;font-size:0.875rem;display:none;}
+  .hint{margin-top:1.5rem;padding:1rem;background:#f5f1e8;border-left:3px solid var(--amber);font-size:0.8rem;color:var(--muted);}
+  .hint strong{color:var(--ink);}
+  a{color:var(--amber);text-decoration:none;}
+</style>
+</head>
+<body>
+<div class="card">
+  <div class="logo">The<span>.</span>Journal</div>
+  <p class="sub">Sign in to manage your blog</p>
+  <div class="error" id="errorMsg"></div>
+  <form id="loginForm" onsubmit="login(event)">
+    <label>Username</label>
+    <input type="text" id="username" required placeholder="admin" autocomplete="username"/>
+    <label>Password</label>
+    <input type="password" id="password" required placeholder="••••••••" autocomplete="current-password"/>
+    <button type="submit" class="btn" id="submitBtn">Sign In →</button>
+  </form>
+  <div class="hint">
+    <strong>Default credentials:</strong><br>
+    Username: <strong>admin</strong> &nbsp;|&nbsp; Password: <strong>admin123</strong>
+  </div>
+  <p style="margin-top:1.5rem;font-size:0.85rem;color:var(--muted);text-align:center"><a href="/">← Back to Blog</a></p>
+</div>
+<script>
+  if (localStorage.getItem('blog_token')) location.href = '/admin';
+
+  async function login(e) {
+    e.preventDefault();
+    const btn = document.getElementById('submitBtn');
+    const err = document.getElementById('errorMsg');
+    btn.disabled = true; btn.textContent = 'Signing in…';
+    err.style.display = 'none';
+    try {
+      const res = await fetch('/api/auth/login', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ username: document.getElementById('username').value, password: document.getElementById('password').value })
+      });
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.error || 'Login failed');
+      localStorage.setItem('blog_token', data.token);
+      localStorage.setItem('blog_user', JSON.stringify(data.user));
+      location.href = '/admin';
+    } catch(ex) {
+      err.textContent = ex.message; err.style.display = 'block';
+      btn.disabled = false; btn.textContent = 'Sign In →';
+    }
+  }
+</script>
+</body>
+</html>

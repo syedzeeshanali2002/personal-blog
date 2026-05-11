@@ -1,0 +1,255 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>Editor — The Journal</title>
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@700;900&family=DM+Sans:wght@400;500&family=JetBrains+Mono:wght@400&display=swap" rel="stylesheet">
+<style>
+  :root{--ink:#1a1209;--paper:#faf8f3;--cream:#f2ede3;--amber:#c8832a;--muted:#8a7e6d;--border:#e0d8c8;--red:#b94040;--green:#2d6a4f;}
+  *{box-sizing:border-box;margin:0;padding:0}
+  body{background:var(--cream);color:var(--ink);font-family:'DM Sans',sans-serif;min-height:100vh;display:flex;}
+
+  .sidebar{width:240px;background:var(--ink);color:var(--paper);flex-shrink:0;display:flex;flex-direction:column;position:fixed;height:100vh;z-index:10;}
+  .sidebar-logo{padding:1.5rem;border-bottom:1px solid rgba(255,255,255,0.1);font-family:'Playfair Display',serif;font-size:1.3rem;font-weight:900;}
+  .sidebar-logo span{color:var(--amber);}
+  nav.sidebar-nav{flex:1;padding:1rem 0;}
+  nav.sidebar-nav a{display:flex;align-items:center;gap:0.7rem;padding:0.7rem 1.5rem;text-decoration:none;color:rgba(250,248,243,0.7);font-size:0.9rem;transition:all 0.2s;}
+  nav.sidebar-nav a:hover,nav.sidebar-nav a.active{background:rgba(255,255,255,0.08);color:var(--paper);}
+  .sidebar-bottom{padding:1rem 1.5rem;border-top:1px solid rgba(255,255,255,0.1);}
+  .sidebar-bottom a{display:block;font-size:0.85rem;color:rgba(250,248,243,0.5);text-decoration:none;margin-bottom:0.5rem;}
+  .logout-btn{background:none;border:none;color:rgba(250,248,243,0.5);cursor:pointer;font-family:inherit;font-size:0.85rem;padding:0;}
+  .logout-btn:hover{color:var(--red);}
+
+  .main{flex:1;margin-left:240px;display:flex;flex-direction:column;height:100vh;overflow:hidden;}
+
+  /* Toolbar */
+  .toolbar{background:white;border-bottom:1.5px solid var(--border);padding:0.75rem 1.5rem;display:flex;align-items:center;gap:1rem;flex-wrap:wrap;}
+  .toolbar-left{flex:1;display:flex;align-items:center;gap:1rem;}
+  .back-btn{text-decoration:none;color:var(--muted);font-size:0.875rem;}
+  .back-btn:hover{color:var(--ink);}
+  .page-label{font-family:'Playfair Display',serif;font-size:1rem;font-weight:700;}
+  .status-badge{font-size:0.7rem;padding:0.2rem 0.5rem;border-radius:2px;background:var(--cream);color:var(--muted);text-transform:uppercase;letter-spacing:0.08em;}
+  .autosave{font-size:0.75rem;color:var(--muted);}
+  .toolbar-right{display:flex;gap:0.5rem;align-items:center;}
+  .btn{padding:0.5rem 1rem;border:none;cursor:pointer;font-family:inherit;font-size:0.875rem;font-weight:500;transition:all 0.2s;}
+  .btn-outline{background:none;border:1.5px solid var(--border);color:var(--ink);}
+  .btn-outline:hover{border-color:var(--ink);}
+  .btn-primary{background:var(--ink);color:var(--paper);}
+  .btn-primary:hover{background:var(--amber);}
+  .btn-publish{background:var(--green);color:white;}
+  .btn-publish:hover{opacity:0.9;}
+  .btn-draft{background:#c47a00;color:white;}
+
+  /* Editor Layout */
+  .editor-layout{flex:1;display:grid;grid-template-columns:1fr 1fr;overflow:hidden;}
+  .editor-pane{display:flex;flex-direction:column;overflow:hidden;}
+  .pane-header{padding:0.6rem 1rem;background:var(--cream);border-bottom:1.5px solid var(--border);font-size:0.75rem;text-transform:uppercase;letter-spacing:0.1em;color:var(--muted);font-weight:500;}
+  .write-area{flex:1;display:flex;flex-direction:column;}
+  .meta-strip{padding:1rem 1.5rem;background:white;border-bottom:1px solid var(--border);}
+  .meta-strip input,.meta-strip textarea,.meta-strip select{width:100%;border:none;outline:none;font-family:'DM Sans',sans-serif;background:transparent;color:var(--ink);}
+  #titleInput{font-family:'Playfair Display',serif;font-size:1.5rem;font-weight:700;padding:0.3rem 0;border-bottom:1.5px solid var(--border);margin-bottom:0.75rem;resize:none;overflow:hidden;min-height:48px;}
+  #titleInput::placeholder{color:var(--border);}
+  .meta-row{display:flex;gap:1rem;align-items:center;flex-wrap:wrap;}
+  .meta-item{display:flex;align-items:center;gap:0.4rem;font-size:0.8rem;}
+  .meta-item label{color:var(--muted);white-space:nowrap;}
+  .meta-item input,.meta-item select{font-size:0.8rem;border:1.5px solid var(--border);padding:0.3rem 0.5rem;background:white;color:var(--ink);}
+  #contentTextarea{flex:1;padding:1.5rem;font-family:'JetBrains Mono',monospace;font-size:0.875rem;line-height:1.7;border:none;outline:none;resize:none;color:var(--ink);background:white;}
+
+  /* Preview */
+  .preview-pane{border-left:2px solid var(--ink);overflow-y:auto;background:var(--paper);}
+  .preview-content{padding:1.5rem 2rem;max-width:640px;}
+  .preview-content h1,.preview-content h2,.preview-content h3{font-family:'Playfair Display',serif;margin:1.5rem 0 0.8rem;line-height:1.2;}
+  .preview-content h1{font-size:1.8rem;}
+  .preview-content h2{font-size:1.4rem;border-bottom:1.5px solid var(--border);padding-bottom:0.5rem;}
+  .preview-content p{font-size:0.95rem;line-height:1.8;margin-bottom:1.2rem;color:#2a2015;}
+  .preview-content pre{background:var(--ink);color:#e8e4d8;padding:1rem;font-family:'JetBrains Mono',monospace;font-size:0.8rem;overflow-x:auto;margin:1rem 0;}
+  .preview-content code{font-family:'JetBrains Mono',monospace;background:var(--cream);padding:0.1em 0.3em;font-size:0.85em;}
+  .preview-content pre code{background:none;padding:0;}
+  .preview-content blockquote{border-left:4px solid var(--amber);padding:0.8rem 1.2rem;margin:1rem 0;background:var(--cream);font-style:italic;}
+  .preview-content ul,.preview-content ol{margin:0 0 1rem 1.5rem;}
+  .preview-content li{margin-bottom:0.4rem;font-size:0.95rem;}
+  .preview-content a{color:var(--amber);}
+  .preview-content hr{border:none;border-top:1.5px solid var(--border);margin:1.5rem 0;}
+
+  /* Toast */
+  .toast{position:fixed;bottom:2rem;right:2rem;padding:0.8rem 1.2rem;background:var(--ink);color:var(--paper);font-size:0.875rem;z-index:1000;transform:translateY(6rem);transition:transform 0.3s;pointer-events:none;}
+  .toast.show{transform:none;}
+  .toast.error{background:var(--red);}
+  .toast.success{background:var(--green);}
+
+  @media(max-width:900px){
+    .sidebar{display:none;} .main{margin-left:0;}
+    .editor-layout{grid-template-columns:1fr;} .preview-pane{display:none;}
+  }
+</style>
+</head>
+<body>
+
+<aside class="sidebar">
+  <div class="sidebar-logo">The<span>.</span>Journal</div>
+  <nav class="sidebar-nav">
+    <a href="/admin"><span>📊</span> Dashboard</a>
+    <a href="/admin/editor" class="active"><span>✏️</span> New Article</a>
+    <a href="/" target="_blank"><span>🌐</span> View Blog</a>
+  </nav>
+  <div class="sidebar-bottom">
+    <a href="/">← Back to Blog</a>
+    <button class="logout-btn" onclick="localStorage.clear();location.href='/admin/login'">Sign Out</button>
+  </div>
+</aside>
+
+<div class="main">
+  <div class="toolbar">
+    <div class="toolbar-left">
+      <a href="/admin" class="back-btn">← Dashboard</a>
+      <span class="page-label" id="editorLabel">New Article</span>
+      <span class="status-badge" id="statusBadge">Draft</span>
+      <span class="autosave" id="autosaveMsg"></span>
+    </div>
+    <div class="toolbar-right">
+      <button class="btn btn-outline" onclick="saveAs('draft')">Save Draft</button>
+      <button class="btn btn-publish" onclick="saveAs('published')">Publish ✓</button>
+    </div>
+  </div>
+
+  <div class="editor-layout">
+    <div class="editor-pane write-area">
+      <div class="pane-header">✏️ Write — Markdown</div>
+      <div class="meta-strip">
+        <textarea id="titleInput" placeholder="Article Title…" rows="1" oninput="autoResize(this);updatePreview()"></textarea>
+        <div class="meta-row">
+          <div class="meta-item">
+            <label>Tags</label>
+            <input type="text" id="tagsInput" placeholder="node, javascript, web" oninput="updatePreview()">
+          </div>
+          <div class="meta-item">
+            <label>Excerpt</label>
+            <input type="text" id="excerptInput" placeholder="Short description…" style="width:240px">
+          </div>
+          <div class="meta-item">
+            <label>Cover URL</label>
+            <input type="text" id="coverInput" placeholder="https://…" style="width:200px" oninput="updatePreview()">
+          </div>
+        </div>
+      </div>
+      <textarea id="contentTextarea" placeholder="Write your article in Markdown…&#10;&#10;# Heading 1&#10;## Heading 2&#10;&#10;**Bold**, *italic*, `code`&#10;&#10;```javascript&#10;const hello = 'world';&#10;```&#10;&#10;> Blockquote&#10;- List item" oninput="updatePreview();scheduleAutoSave()"></textarea>
+    </div>
+
+    <div class="editor-pane preview-pane">
+      <div class="pane-header">👁 Preview</div>
+      <div class="preview-content" id="previewContent">
+        <p style="color:var(--border);font-style:italic">Start writing to see the preview…</p>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script>
+  const token = localStorage.getItem('blog_token');
+  if (!token) location.href = '/admin/login';
+
+  let articleId = null;
+  let autoSaveTimer;
+
+  // Load existing article if editing
+  const params = new URLSearchParams(location.search);
+  if (params.get('id')) {
+    articleId = params.get('id');
+    document.getElementById('editorLabel').textContent = 'Edit Article';
+    loadArticle(articleId);
+  }
+
+  async function loadArticle(id) {
+    try {
+      const res = await fetch(`/api/articles/id/${id}`, { headers: { Authorization: `Bearer ${token}` } });
+      const a = await res.json();
+      document.getElementById('titleInput').value = a.title;
+      document.getElementById('contentTextarea').value = a.content;
+      document.getElementById('tagsInput').value = a.tags.join(', ');
+      document.getElementById('excerptInput').value = a.excerpt || '';
+      document.getElementById('coverInput').value = a.coverImage || '';
+      document.getElementById('statusBadge').textContent = a.status;
+      autoResize(document.getElementById('titleInput'));
+      updatePreview();
+    } catch { showToast('Failed to load article', 'error'); }
+  }
+
+  // Markdown preview
+  function parseMarkdown(md) {
+    return md
+      .replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;')
+      .replace(/```(\w*)\n([\s\S]*?)```/g,(_,l,c)=>`<pre><code>${c.trim()}</code></pre>`)
+      .replace(/`([^`]+)`/g,'<code>$1</code>')
+      .replace(/^### (.+)$/gm,'<h3>$1</h3>')
+      .replace(/^## (.+)$/gm,'<h2>$1</h2>')
+      .replace(/^# (.+)$/gm,'<h1>$1</h1>')
+      .replace(/\*\*([^*]+)\*\*/g,'<strong>$1</strong>')
+      .replace(/\*([^*]+)\*/g,'<em>$1</em>')
+      .replace(/\[([^\]]+)\]\(([^)]+)\)/g,'<a href="$2">$1</a>')
+      .replace(/^> (.+)$/gm,'<blockquote>$1</blockquote>')
+      .replace(/^---$/gm,'<hr>')
+      .replace(/^[-*] (.+)$/gm,'<li>$1</li>')
+      .replace(/(<li>[\s\S]+?<\/li>\n?)+/g,m=>`<ul>${m}</ul>`)
+      .replace(/\n\n/g,'</p><p>')
+      .replace(/^(?!<[houbp]|<li|<blockquote|<hr|<pre)(.+)$/gm,'<p>$1</p>')
+      .replace(/<p><\/p>/g,'');
+  }
+
+  function updatePreview() {
+    const title = document.getElementById('titleInput').value;
+    const content = document.getElementById('contentTextarea').value;
+    const preview = document.getElementById('previewContent');
+    let html = '';
+    if (title) html += `<h1 style="font-family:'Playfair Display',serif;font-size:2rem;margin-bottom:1rem">${title}</h1>`;
+    html += content ? parseMarkdown(content) : '<p style="color:var(--border);font-style:italic">Continue writing…</p>';
+    preview.innerHTML = html;
+  }
+
+  function autoResize(el) {
+    el.style.height = 'auto';
+    el.style.height = el.scrollHeight + 'px';
+  }
+
+  function scheduleAutoSave() {
+    clearTimeout(autoSaveTimer);
+    document.getElementById('autosaveMsg').textContent = 'Unsaved changes…';
+    autoSaveTimer = setTimeout(() => saveAs('draft', true), 5000);
+  }
+
+  async function saveAs(status, silent = false) {
+    const title = document.getElementById('titleInput').value.trim();
+    const content = document.getElementById('contentTextarea').value.trim();
+    if (!title || !content) { if (!silent) showToast('Title and content are required', 'error'); return; }
+
+    const tags = document.getElementById('tagsInput').value.split(',').map(t => t.trim()).filter(Boolean);
+    const payload = { title, content, tags, status, excerpt: document.getElementById('excerptInput').value, coverImage: document.getElementById('coverInput').value };
+
+    try {
+      const url = articleId ? `/api/articles/${articleId}` : '/api/articles';
+      const method = articleId ? 'PUT' : 'POST';
+      const res = await fetch(url, { method, headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` }, body: JSON.stringify(payload) });
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.error);
+      if (!articleId) { articleId = data.article.id; history.replaceState({}, '', `/admin/editor?id=${articleId}`); }
+      document.getElementById('statusBadge').textContent = status;
+      document.getElementById('autosaveMsg').textContent = `Saved ${new Date().toLocaleTimeString()}`;
+      if (!silent) showToast(status === 'published' ? '✓ Published!' : '✓ Draft saved', 'success');
+    } catch(e) { showToast(e.message || 'Save failed', 'error'); }
+  }
+
+  function showToast(msg, type = '') {
+    const t = document.getElementById('toast');
+    t.textContent = msg;
+    t.className = `toast ${type}`;
+    setTimeout(() => t.classList.add('show'), 10);
+    setTimeout(() => t.classList.remove('show'), 3000);
+  }
+
+  // Initial preview
+  updatePreview();
+</script>
+</body>
+</html>
